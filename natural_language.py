@@ -8,6 +8,7 @@ return categories
 
 import os, sys, doctest
 from bs4 import BeautifulSoup
+import google.cloud.language
 
 def main():
     check_arg()
@@ -27,13 +28,20 @@ def interface():
             print_users()
         elif command == "sentiment" or command == "sent":
             sentiment_analysis()
+        elif command == "show":
+            show_text()
         else:
             print("Not proper command")
+
+def show_text():
+    text = load_file()
+    text_soup = BeautifulSoup(text, "html.parser")
+    print(text_soup.prettify())
 
 def sentiment_analysis():
     text = load_file()
     text_soup = BeautifulSoup(text, "html.parser")
-    print(text_soup.prettify())
+    user_messages = {}
     """all_messages = text_soup.find_all("div", class_="message")
     for message in all_messages:
         print(message)
@@ -41,9 +49,22 @@ def sentiment_analysis():
         print(message.descendants)
         """
     all_messages = text_soup.find("div", class_="thread")
-    print(all_messages)
-    for child in all_messages.descendants:
-        print(child)
+    #print(all_messages)
+    for child in all_messages.children:
+        try:
+            if child.find("span", class_="user"):
+                name = child.find("span", class_="user").text
+                message = child.next_sibling.text
+                if name in user_messages:
+                    prev_message = user_messages[name]
+                    user_messages[name] = message + " " + prev_message
+                else:
+                    user_messages[name] = message
+                #print(name, message)
+                #print("---------------")
+        except:
+            pass
+    print(user_messages)
 
 
 def print_users():
