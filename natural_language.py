@@ -8,7 +8,10 @@ return categories
 
 import os, sys, doctest
 from bs4 import BeautifulSoup
-import google.cloud.language
+# Imports the Google Cloud client library
+from google.cloud import language
+from google.cloud.language import enums
+from google.cloud.language import types
 
 def main():
     check_arg()
@@ -42,6 +45,7 @@ def sentiment_analysis():
     text = load_file()
     text_soup = BeautifulSoup(text, "html.parser")
     user_messages = {}
+    user_sentiment = {}
     """all_messages = text_soup.find_all("div", class_="message")
     for message in all_messages:
         print(message)
@@ -64,8 +68,18 @@ def sentiment_analysis():
                 #print("---------------")
         except:
             pass
-    print(user_messages)
+    #print(user_messages)
+    # Instantiates a client
+    client = language.LanguageServiceClient()
 
+    for user, message in user_messages.items():
+        # The text to analyze
+        document = types.Document(content=message, type=enums.Document.Type.PLAIN_TEXT)
+        # Detects the sentiment of the text
+        sentiment = client.analyze_sentiment(document=document).document_sentiment
+        print('User: {}'.format(user))
+        #print('Text: {}'.format(message))
+        print('Sentiment: {}, {}'.format(sentiment.score, sentiment.magnitude))
 
 def print_users():
     text = load_file()
