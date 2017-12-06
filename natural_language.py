@@ -6,7 +6,7 @@ return sentiment, return sentiment over time
 return categories
 """
 
-import os, sys, doctest
+import os, sys
 from bs4 import BeautifulSoup
 # Imports the Google Cloud client library
 from google.cloud import language
@@ -68,12 +68,6 @@ def category_analysis():
             document = types.Document(content=message, type=enums.Document.Type.PLAIN_TEXT)
             categories = client.classify_text(document).categories
             print("User: {0:<16}, Category:{1:<16}, Confidence: {2:.2f}".format(user, categories[0].name, categories[0].confidence))
-            """
-            for category in categories:
-                print(u'=' * 20)
-                print(u'{:<16}: {}'.format('name', category.name))
-                print(u'{0:<16}: {1:.2f}'.format('confidence', category.confidence))
-            """
         except:
             print("User {0:<16}, not enough information".format(user))
 
@@ -129,8 +123,11 @@ def check_arg():
         sys.exit()
 
 if __name__ == "__main__":
-    doctest.testmod()
     instructions = """
-    Yo whats up
+    >user: return a list of users in the conversation
+    >show: show the conversation in HTML format being analysed
+    >sentiment: gather the conversation of every user and perform sentiment analysis and return the sentiment score and the magnitude
+    >category: gather the conversation of every user and perform category analysis and returns the name of the category and the confidence percentage. This doesn't really work.
+    >exit: exit the program
     """
     main()
