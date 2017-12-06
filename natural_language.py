@@ -33,27 +33,18 @@ def interface():
             sentiment_analysis()
         elif command == "show":
             show_text()
+        elif command == "category" or command == "cat":
+            category_analysis()
         else:
             print("Not proper command")
 
-def show_text():
-    text = load_file()
-    text_soup = BeautifulSoup(text, "html.parser")
-    print(text_soup.prettify())
-
-def sentiment_analysis():
+def get_user_messages():
     text = load_file()
     text_soup = BeautifulSoup(text, "html.parser")
     user_messages = {}
-    user_sentiment = {}
-    """all_messages = text_soup.find_all("div", class_="message")
-    for message in all_messages:
-        print(message)
-        print(message.children)
-        print(message.descendants)
-        """
+
+    #retrieve user name and their message
     all_messages = text_soup.find("div", class_="thread")
-    #print(all_messages)
     for child in all_messages.children:
         try:
             if child.find("span", class_="user"):
@@ -64,11 +55,37 @@ def sentiment_analysis():
                     user_messages[name] = message + " " + prev_message
                 else:
                     user_messages[name] = message
-                #print(name, message)
-                #print("---------------")
         except:
             pass
-    #print(user_messages)
+    return(user_messages)
+
+def category_analysis():
+    user_messages = get_user_messages()
+    client = language.LanguageServiceClient()
+
+    for user, message in user_messages.items():
+        try:
+            document = types.Document(content=message, type=enums.Document.Type.PLAIN_TEXT)
+            categories = client.classify_text(document).categories
+            print("User: {0:<16}, Category:{1:<16}, Confidence: {2:.2f}".format(user, categories[0].name, categories[0].confidence))
+            """
+            for category in categories:
+                print(u'=' * 20)
+                print(u'{:<16}: {}'.format('name', category.name))
+                print(u'{0:<16}: {1:.2f}'.format('confidence', category.confidence))
+            """
+        except:
+            print("User {0:<16}, not enough information".format(user))
+
+def show_text():
+    text = load_file()
+    text_soup = BeautifulSoup(text, "html.parser")
+    print(text_soup.prettify())
+
+def sentiment_analysis():
+    user_sentiment = {}
+    user_messages = get_user_messages()
+
     # Instantiates a client
     client = language.LanguageServiceClient()
 
@@ -78,10 +95,8 @@ def sentiment_analysis():
         # Detects the sentiment of the text
         sentiment = client.analyze_sentiment(document=document).document_sentiment
         user_sentiment[user] = (sentiment.score, sentiment.magnitude)
-        #print('User: {}'.format(user))
         #print('Text: {}'.format(message))
-        #print('Sentiment: {}, {}'.format(sentiment.score, sentiment.magnitude))
-    #print(user_sentiment)
+
     sorted_dict = (sorted(user_sentiment.items(), key=lambda x:x[1]))
     for i in sorted_dict:
         print("User: {0:10s} \t Sentiment: {1:.2f} \t Magnitude: {2:.2f}".format(i[0],i[1][0],i[1][1]))
@@ -91,14 +106,6 @@ def print_users():
     user_list_output = []
     text_soup = BeautifulSoup(text, "html.parser")
     print("From", text_soup.title.string)
-    """
-    user_list = text_soup.find_all("span", class_="user")
-    for user in user_list:
-        if user.text not in user_list_output:
-            user_list_output.append(user.text)
-    print(user_list_output)
-    """
-
 
 def load_file():
     try:
