@@ -77,9 +77,14 @@ def sentiment_analysis():
         document = types.Document(content=message, type=enums.Document.Type.PLAIN_TEXT)
         # Detects the sentiment of the text
         sentiment = client.analyze_sentiment(document=document).document_sentiment
-        print('User: {}'.format(user))
+        user_sentiment[user] = (sentiment.score, sentiment.magnitude)
+        #print('User: {}'.format(user))
         #print('Text: {}'.format(message))
-        print('Sentiment: {}, {}'.format(sentiment.score, sentiment.magnitude))
+        #print('Sentiment: {}, {}'.format(sentiment.score, sentiment.magnitude))
+    #print(user_sentiment)
+    sorted_dict = (sorted(user_sentiment.items(), key=lambda x:x[1]))
+    for i in sorted_dict:
+        print("User: {0:10s} \t Sentiment: {1:.2f} \t Magnitude: {2:.2f}".format(i[0],i[1][0],i[1][1]))
 
 def print_users():
     text = load_file()
